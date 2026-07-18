@@ -1,0 +1,66 @@
+<Project>
+
+	<PropertyGroup>
+		<UnityPackageDestination>$(MSBuildThisFileDirectory)Unity\</UnityPackageDestination>
+	</PropertyGroup>
+
+	<UsingTask TaskName="_SyncUnityDir" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+		<ParameterGroup>
+			<SourceFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+			<DestRoot ParameterType="System.String" Required="true" />
+			<Pattern ParameterType="System.String" Required="false" />
+		</ParameterGroup>
+		<Task>
+			<Using Namespace="System.Collections.Generic" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Linq" />
+			<Code Type="Fragment" Language="cs"><![CDATA[
+				var pattern = string.IsNullOrEmpty(Pattern) ? "*.cs" : Pattern;
+				var expected = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+				foreach (var f in SourceFiles)
+					expected.Add(Path.Combine(f.GetMetadata("RecursiveDir"), f.GetMetadata("Filename") + f.GetMetadata("Extension")));
+
+				Directory.CreateDirectory(DestRoot);
+				foreach (var existing in Directory.GetFiles(DestRoot, pattern, SearchOption.AllDirectories))
+				{
+					var rel = existing.Substring(DestRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+					if (!expected.Contains(rel)) File.Delete(existing);
+				}
+				foreach (var d in Directory.GetDirectories(DestRoot, "*", SearchOption.AllDirectories).OrderByDescending(p => p.Length))
+					if (Directory.Exists(d) && Directory.GetFileSystemEntries(d).Length == 0)
+						Directory.Delete(d);
+
+				foreach (var f in SourceFiles)
+				{
+					var src = f.ItemSpec;
+					var dest = Path.Combine(DestRoot, f.GetMetadata("RecursiveDir"), f.GetMetadata("Filename") + f.GetMetadata("Extension"));
+					Directory.CreateDirectory(Path.GetDirectoryName(dest));
+					if (!File.Exists(dest) || File.GetLastWriteTimeUtc(src) != File.GetLastWriteTimeUtc(dest) || new FileInfo(src).Length != new FileInfo(dest).Length)
+						File.Copy(src, dest, true);
+				}
+			]]></Code>
+		</Task>
+	</UsingTask>
+
+	<!--
+	  Keeps the Unity/ folder (a git-linkable UPM package) in sync with build output:
+	    - Attributes.cs           -> Unity/Runtime/       (compiled by Unity's own asmdef instead of
+	      being shipped as a prebuilt netstandard2.0 assembly)
+	    - GenFactory.Generator.dll -> Unity/RoslynAnalyzers/ (imported as a Roslyn analyzer in Unity;
+	      .meta labels are added manually, not generated here)
+	  Only runs on Release builds of GenFactory.Generator so Debug iteration doesn't churn the
+	  tracked Unity folder.
+	-->
+	<Target Name="SyncUnityPackage" AfterTargets="Build"
+			Condition="'$(Configuration)' == 'Release' AND '$(MSBuildProjectName)' == 'GenFactory.Generator'">
+		<ItemGroup>
+			<_UnityRuntimeSource Include="$(MSBuildProjectDirectory)\Attributes.cs" />
+		</ItemGroup>
+
+		<_SyncUnityDir SourceFiles="@(_UnityRuntimeSource)" DestRoot="$(UnityPackageDestination)Runtime\" />
+
+		<MakeDir Directories="$(UnityPackageDestination)RoslynAnalyzers" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(UnityPackageDestination)RoslynAnalyzers" SkipUnchangedFiles="true" />
+	</Target>
+
+</Project>

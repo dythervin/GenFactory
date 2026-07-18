@@ -1,0 +1,24 @@
+<Project>
+
+    <!-- Shared, environment-independent metadata only. Anything that changes compiled bytes based
+         on the build environment (ContinuousIntegrationBuild, SourceLink, symbol/embedding options)
+         lives in the packable project (GenFactory.Attributes) instead, NOT here: the generator DLL
+         is checked into Unity/ and CI verifies it byte-for-byte against a fresh Release build, so
+         its build must stay reproducible across machines and CI (see the generator csproj for the
+         two properties that make that hold). -->
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+
+        <Version>0.1.0</Version>
+        <Authors>dythervin</Authors>
+        <Company>dythervin</Company>
+        <Copyright>Copyright (c) 2026 dythervin</Copyright>
+
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/dythervin/GenFactory</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dythervin/GenFactory.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>factory;source-generator;source-generators;roslyn;dependency-injection;di;incremental-generator</PackageTags>
+    </PropertyGroup>
+
+</Project>

@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+
+        <!-- This project is the NuGet package: its own build output is the runtime attributes
+             assembly (lib/netstandard2.0/GenFactory.Attributes.dll), and it bundles the source
+             generator as an analyzer (analyzers/dotnet/cs/GenFactory.Generator.dll) below. -->
+        <IsPackable>true</IsPackable>
+        <PackageId>Dythervin.GenFactory</PackageId>
+        <Title>GenFactory</Title>
+        <Description>Source-generated DI factories for C#. [GenerateFactory] emits an interface/implementation factory pair per decorated class (constructor takes DI-resolved dependencies, Create takes caller-supplied [FactoryArg] values), plus a per-assembly registry and RegisterGeneratedFactories bridges for VContainer, Microsoft.Extensions.DependencyInjection and Zenject.</Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReleaseNotes>See CHANGELOG.md.</PackageReleaseNotes>
+
+        <!-- The attributes assembly carries no IL logic worth referencing at runtime beyond the
+             marker attributes themselves, but consumers DO compile against it, so it must ship in
+             lib/ (default). It is not a development-only dependency. -->
+        <IncludeBuildOutput>true</IncludeBuildOutput>
+
+        <!-- Reproducible, source-linkable package. These are scoped to this project (not
+             Directory.Build.props) on purpose: ContinuousIntegrationBuild changes compiled bytes,
+             and the generator DLL bundled below is checked into Unity/ and verified byte-for-byte
+             by CI, so the generator must NOT see these settings. -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+
+        <!-- Hook that bundles the generator DLL into this package (see target below). -->
+        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackGenFactoryAnalyzer</TargetsForTfmSpecificContentInPackage>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Attribute source lives in GenFactory.Generator; linking it here keeps this assembly
+             in sync automatically on every build instead of maintaining a separate copy. -->
+        <Compile Include="..\GenFactory.Generator\Attributes.cs" Link="Attributes.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Force the generator to build (so its DLL exists for packing) and run as an analyzer
+             here, but do NOT reference it as a normal assembly. -->
+        <ProjectReference Include="..\GenFactory.Generator\GenFactory.Generator.csproj"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- README/LICENSE ship inside the package (README is rendered on nuget.org). -->
+        <None Include="..\README.md" Pack="true" PackagePath="\" Visible="false" />
+        <None Include="..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
+    </ItemGroup>
+
+    <!-- Bundle the built generator DLL into this package's analyzer path. Runs during pack, after
+         the ProjectReference above has produced the generator assembly. -->
+    <Target Name="_PackGenFactoryAnalyzer">
+        <ItemGroup>
+            <TfmSpecificPackageFile Include="..\GenFactory.Generator\bin\$(Configuration)\netstandard2.0\GenFactory.Generator.dll"
+                                    PackagePath="analyzers/dotnet/cs" />
+        </ItemGroup>
+    </Target>
+
+</Project>

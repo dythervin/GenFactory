@@ -1,0 +1,19 @@
+# Auto-detect text files and normalize line endings to LF in the repo.
+* text=auto
+
+# Source and project files.
+*.cs text diff=csharp
+*.csproj text
+*.sln text eol=crlf
+*.targets text
+*.props text
+*.json text
+*.md text
+
+# Unity-specific text formats that must not be reformatted.
+*.asmdef text
+*.asmref text
+*.meta text -diff merge=unityyamlmerge
+
+# Binary — never touch line endings, never diff as text.
+*.dll binary

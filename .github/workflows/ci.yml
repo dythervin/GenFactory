@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install the exact SDK pinned in global.json (10.0.102) so the Release build of the
+      # generator reproduces the committed Unity/ DLL byte-for-byte; also install 9.0.x so the
+      # net9.0 test project runs on the 9.0 runtime.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            10.0.102
+
+      - name: Restore
+        run: dotnet restore GenFactory.sln
+
+      - name: Build
+        run: dotnet build GenFactory.sln --no-restore --configuration Debug
+
+      - name: Test
+        run: dotnet test GenFactory.sln --no-build --configuration Debug
+
+      # Unity.targets syncs Unity/RoslynAnalyzers/GenFactory.Generator.dll and
+      # Unity/Runtime/Attributes.cs from a Release build. Rebuilding here and diffing
+      # against what's committed catches a Unity/ folder that's gone stale relative to source
+      # (e.g. someone only ran a Debug build, or hand-edited the synced files) before it merges.
+      - name: Verify Unity/ is in sync with a Release build
+        run: |
+          dotnet build GenFactory.Generator/GenFactory.Generator.csproj --configuration Release
+          git diff --exit-code -- Unity/RoslynAnalyzers/GenFactory.Generator.dll Unity/Runtime/Attributes.cs

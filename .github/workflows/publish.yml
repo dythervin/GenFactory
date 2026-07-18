@@ -1,0 +1,64 @@
+name: Publish
+
+# Publishes the NuGet package when a version tag (v1.2.3) is pushed.
+#
+# Uses NuGet Trusted Publishing (OIDC): no long-lived API key is stored. Instead the job requests a
+# short-lived GitHub OIDC token, and NuGet/login exchanges it for a temporary (1-hour) NuGet key.
+# Configure the matching policy once at nuget.org -> your username -> Trusted Publishing:
+#   Repository Owner: dythervin
+#   Repository:       GenFactory
+#   Workflow File:    publish.yml   (file name only, no path)
+# and add a repo secret NUGET_USER = your nuget.org profile name (not your email).
+#
+# OpenUPM needs no workflow here: once the package is submitted to openupm.com, its build pipeline
+# picks up the same git tag automatically. Keep the tag, package.json "version", and the csproj
+# <Version> in sync before tagging.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish-nuget:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # enable GitHub OIDC token issuance for Trusted Publishing
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Pinned SDK (10.0.102, via global.json) for a reproducible package build, plus 9.0.x so the
+      # net9.0 tests run on the 9.0 runtime.
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            10.0.102
+
+      - name: Derive version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: dotnet restore GenFactory.sln
+
+      - name: Build (Release)
+        run: dotnet build GenFactory.sln --no-restore --configuration Release -p:Version=${{ steps.version.outputs.version }}
+
+      - name: Test
+        run: dotnet test GenFactory.sln --no-build --configuration Release
+
+      - name: Pack
+        run: dotnet pack GenFactory.Attributes/GenFactory.Attributes.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./artifacts
+
+      # Request the short-lived key immediately before push (it expires after 1 hour, one use).
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

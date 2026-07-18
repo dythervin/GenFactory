@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <IncludeBuildOutput>true</IncludeBuildOutput>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+        <!-- This DLL is checked into Unity/ and verified byte-for-byte by CI against a fresh Release
+             build, so its build must be fully reproducible. Two things otherwise leak and break that:
+               1. The git commit SHA, appended to AssemblyInformationalVersion (0.1.0+<sha>). This is
+                  fatal to commit-then-verify: committing the rebuilt DLL changes HEAD's SHA, so a CI
+                  rebuild embeds a different SHA and can never match. Drop the SHA suffix.
+               2. The absolute .pdb path in the debug directory (X:\... vs /home/runner/...). A
+                  shipped Roslyn analyzer needs no PDB, so emit none. -->
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Attributes.cs is authored here but only compiled into GenFactory.Attributes (linked from
+             its csproj), so consumers referencing both assemblies don't get a duplicate-type clash.
+             The generator itself only needs the attribute names as strings, never the types. -->
+        <Compile Remove="Attributes.cs" />
+        <None Include="Attributes.cs" />
+    </ItemGroup>
+
+    <Import Project="..\Unity.targets" />
+
+</Project>
