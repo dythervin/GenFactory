@@ -34,6 +34,26 @@ namespace App
         }
 
         [Fact]
+        public void InjectedField_OfBuiltInType_IsGloballyQualified()
+        {
+            var result = Run(@"
+namespace App
+{
+    [GenFactory.GenerateFactory]
+    public class Service
+    {
+        public Service(int retries, string name) {}
+    }
+}
+");
+            Assert.Empty(result.Errors);
+            Assert.Empty(result.CompileErrors);
+            // Field declarations are always fully global::-qualified, even for built-in types.
+            Assert.Contains("private readonly global::System.Int32 _retries;", result.Generated);
+            Assert.Contains("private readonly global::System.String _name;", result.Generated);
+        }
+
+        [Fact]
         public void GeneratesFactory_WithRequiredFactoryArgCtorParam()
         {
             var result = Run(@"
@@ -48,7 +68,7 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(int count)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 count)", result.Generated);
             Assert.Contains("return new global::App.Service(count);", result.Generated);
         }
 
@@ -67,7 +87,7 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(int count = 42)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 count = 42)", result.Generated);
         }
 
         [Fact]
@@ -85,7 +105,7 @@ namespace App
 ");
             // 'required' has a default too, so both are optional; still check they render together in order.
             Assert.Empty(result.Errors);
-            Assert.Contains("Create(int optional = 1, string required = null)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 optional = 1, global::System.String required = null)", result.Generated);
         }
 
         [Fact]
@@ -106,7 +126,7 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(int count)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 count)", result.Generated);
             Assert.Contains("return new global::App.Service() { Count = count };", result.Generated);
         }
 
@@ -127,7 +147,7 @@ namespace App
 }
 ");
             Assert.Empty(result.Errors);
-            Assert.Contains("Create(int required, int extra, int optional = 5)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 required, global::System.Int32 extra, global::System.Int32 optional = 5)", result.Generated);
         }
 
         [Fact]
@@ -220,7 +240,7 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(int x)", result.Generated);
+            Assert.Contains("Create(global::System.Int32 x)", result.Generated);
             Assert.Contains("return new global::App.Service(x);", result.Generated);
         }
 
@@ -352,12 +372,12 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("bool flag = true", result.Generated);
-            Assert.Contains("string text = \"hi\"", result.Generated);
-            Assert.Contains("char letter = 'x'", result.Generated);
-            Assert.Contains("decimal amount = 3.5m", result.Generated);
+            Assert.Contains("global::System.Boolean flag = true", result.Generated);
+            Assert.Contains("global::System.String text = \"hi\"", result.Generated);
+            Assert.Contains("global::System.Char letter = 'x'", result.Generated);
+            Assert.Contains("global::System.Decimal amount = 3.5m", result.Generated);
             Assert.Contains("(global::App.Color)(1)", result.Generated);
-            Assert.Contains("string? none = null", result.Generated);
+            Assert.Contains("global::System.String? none = null", result.Generated);
         }
 
         [Fact]
@@ -897,7 +917,7 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(params int[] values)", result.Generated);
+            Assert.Contains("Create(params global::System.Int32[] values)", result.Generated);
         }
 
         [Fact]
@@ -918,8 +938,8 @@ namespace App
 ");
             Assert.Empty(result.Errors);
             Assert.Empty(result.CompileErrors);
-            Assert.Contains("Create(int[] values, int extra)", result.Generated);
-            Assert.DoesNotContain("params int[] values", result.Generated);
+            Assert.Contains("Create(global::System.Int32[] values, global::System.Int32 extra)", result.Generated);
+            Assert.DoesNotContain("params global::System.Int32[] values", result.Generated);
         }
     }
 }

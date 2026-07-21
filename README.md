@@ -96,7 +96,7 @@ Adding a new container is a matter of appending one entry to `DiProvider.All` in
 | Path | Purpose |
 |---|---|
 | `GenFactory.Generator/` | The incremental source generator (`netstandard2.0`, `IIncrementalGenerator`). |
-| `GenFactory.Attributes/` | The `[GenerateFactory]` / `[FactoryArg]` / `[FactoryCtor]` attributes, as a separate assembly so consumers don't pull in the analyzer as a normal reference. Its `Attributes.cs` is a linked copy of `GenFactory.Generator/Attributes.cs` — one source of truth, kept in sync at compile time. |
+| `GenFactory/` | The `[GenerateFactory]` / `[FactoryArg]` / `[FactoryCtor]` attributes, as a separate assembly so consumers don't pull in the analyzer as a normal reference. Its `Attributes.cs` is a linked copy of `GenFactory.Generator/Attributes.cs` — one source of truth, kept in sync at compile time. |
 | `GenFactory.Tests/` | xUnit tests that run the generator in-memory via `GeneratorHarness` and assert on the generated source. |
 | `Unity/` | A git-linkable UPM package: `Runtime/` compiles the attributes directly from source via an `asmdef`, `RoslynAnalyzers/` holds the built generator DLL (its `.meta` is checked in with the `RoslynAnalyzer` label already set). |
 | `Unity.targets` | MSBuild logic that keeps `Unity/` in sync with build output (Release builds only). |

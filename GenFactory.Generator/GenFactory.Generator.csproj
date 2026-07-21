@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Attributes.cs is authored here but only compiled into GenFactory.Attributes (linked from
+        <!-- Attributes.cs is authored here but only compiled into the GenFactory assembly (linked from
              its csproj), so consumers referencing both assemblies don't get a duplicate-type clash.
              The generator itself only needs the attribute names as strings, never the types. -->
         <Compile Remove="Attributes.cs" />

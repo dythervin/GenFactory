@@ -6,7 +6,7 @@
         <LangVersion>latest</LangVersion>
 
         <!-- This project is the NuGet package: its own build output is the runtime attributes
-             assembly (lib/netstandard2.0/GenFactory.Attributes.dll), and it bundles the source
+             assembly (lib/netstandard2.0/GenFactory.dll), and it bundles the source
              generator as an analyzer (analyzers/dotnet/cs/GenFactory.Generator.dll) below. -->
         <IsPackable>true</IsPackable>
         <PackageId>Dythervin.GenFactory</PackageId>
@@ -34,9 +34,12 @@
         <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_PackGenFactoryAnalyzer</TargetsForTfmSpecificContentInPackage>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
-    </ItemGroup>
+    <!-- SourceLink ships inside the .NET SDK (8.0+) and auto-activates for the GitHub-hosted origin,
+         so no explicit Microsoft.SourceLink.GitHub reference is needed. The standalone package stalled
+         at 8.0.0, whose bundled Microsoft.Build.Tasks.Git fails to decode repos written by newer git
+         ("Error reading git repository information: Found invalid data while decoding"); the SDK's
+         bundled Tasks.Git does not. Relying on the SDK keeps the package source-linked and the build
+         working across git versions. -->
 
     <ItemGroup>
         <!-- Attribute source lives in GenFactory.Generator; linking it here keeps this assembly

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-21
+
+### Changed
+
+- Every type reference in generated code — fields, constructor parameters, `Create` parameters,
+  and default-value literals — is now fully `global::`-qualified, including built-in types
+  (`global::System.Int32` rather than the `int` keyword), so a generated type reference can never be
+  shadowed by a type of the same name in the consumer's scope.
+- Renamed the attributes project and assembly from `GenFactory.Attributes` to `GenFactory`; the
+  runtime assembly consumers compile against is now `GenFactory.dll`. The attribute namespace
+  (`GenFactory`) and the NuGet package id (`Dythervin.GenFactory`) are unchanged.
+
 ## [0.1.0] - 2026-07-18
 
 ### Added
@@ -23,5 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   assembly.
 - Unity UPM package (`com.dythervin.genfactory`), installable via git URL or OpenUPM.
 
-[Unreleased]: https://github.com/dythervin/GenFactory/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/dythervin/GenFactory/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/dythervin/GenFactory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dythervin/GenFactory/releases/tag/v0.1.0

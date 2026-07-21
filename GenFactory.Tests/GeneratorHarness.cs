@@ -44,7 +44,7 @@ namespace GenFactory.Tests
                 .Where(p => p.Length > 0 && File.Exists(p))
                 .Select(p => (MetadataReference)MetadataReference.CreateFromFile(p));
 
-            // GenFactory.Attributes isn't part of the trusted platform assembly set (it's a
+            // The GenFactory attributes assembly isn't part of the trusted platform assembly set (it's a
             // project reference, not a runtime assembly), so it's added explicitly.
             var attributes = MetadataReference.CreateFromFile(typeof(GenerateFactoryAttribute).Assembly.Location);
 

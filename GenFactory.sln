@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenFactory.Generator", "Gen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenFactory.Tests", "GenFactory.Tests\GenFactory.Tests.csproj", "{284739A0-34C9-4D23-BEC4-CE64DE722AB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenFactory.Attributes", "GenFactory.Attributes\GenFactory.Attributes.csproj", "{6C1B6D9E-6E64-4C63-9A8F-6B5E6B6E2B1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenFactory", "GenFactory\GenFactory.csproj", "{6C1B6D9E-6E64-4C63-9A8F-6B5E6B6E2B1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

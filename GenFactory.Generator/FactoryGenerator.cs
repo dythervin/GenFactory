@@ -17,14 +17,16 @@ namespace GenFactory.Generator
         private const string FactoryCtorAttribute = "GenFactory.FactoryCtorAttribute";
         private const string DefaultRegistryNamespace = "GenFactory.Generated";
 
+        // Every emitted type reference is fully global::-qualified, including built-in types
+        // (global::System.Int32 rather than the "int" keyword). UseSpecialTypes is deliberately NOT
+        // set: a keyword like "int" or "string" can be shadowed by a type of that name in the
+        // consumer's scope, whereas the global::-qualified form never can.
         private static readonly SymbolDisplayFormat Fqn =
             SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
-                SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier |
-                SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+                SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
         private static readonly SymbolDisplayFormat FqnNoNull =
-            SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
-                SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+            SymbolDisplayFormat.FullyQualifiedFormat;
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {

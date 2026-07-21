@@ -16,7 +16,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\GenFactory.Generator\GenFactory.Generator.csproj" />
-        <ProjectReference Include="..\GenFactory.Attributes\GenFactory.Attributes.csproj" />
+        <ProjectReference Include="..\GenFactory\GenFactory.csproj" />
     </ItemGroup>
 
 </Project>

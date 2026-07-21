@@ -51,7 +51,7 @@ jobs:
         run: dotnet test GenFactory.sln --no-build --configuration Release
 
       - name: Pack
-        run: dotnet pack GenFactory.Attributes/GenFactory.Attributes.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./artifacts
+        run: dotnet pack GenFactory/GenFactory.csproj --no-build --configuration Release -p:Version=${{ steps.version.outputs.version }} --output ./artifacts
 
       # Request the short-lived key immediately before push (it expires after 1 hour, one use).
       - name: NuGet login (OIDC -> temporary API key)
