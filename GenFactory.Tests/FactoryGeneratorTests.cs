@@ -54,6 +54,60 @@ namespace App
         }
 
         [Fact]
+        public void InjectedField_OfTypeFromAnotherGenerator_ResolvesViaCopiedUsing()
+        {
+            // DbContext exists only in a sibling generator's output, so FactoryGenerator sees it as an
+            // unqualifiable error symbol. The target's using must be copied into the factory for the
+            // bare name to bind in the final compilation.
+            var target = @"
+using Generated;
+namespace App
+{
+    [GenFactory.GenerateFactory]
+    public class Service
+    {
+        public Service(DbContext db) {}
+    }
+}";
+            var sibling = @"
+namespace Generated
+{
+    public class DbContext {}
+}";
+            var result = GeneratorHarness.RunWithSibling(sibling, target);
+
+            Assert.Empty(result.Errors);
+            Assert.Empty(result.CompileErrors);
+            Assert.Contains("using Generated;", result.Generated);
+            Assert.Contains("private readonly DbContext _db;", result.Generated);
+        }
+
+        [Fact]
+        public void CopiedUsings_ExcludeGlobalUsings()
+        {
+            var result = Run(@"
+global using System.Text;
+using System.Collections.Generic;
+namespace App
+{
+    public interface IThing {}
+    public class Thing : IThing {}
+
+    [GenFactory.GenerateFactory]
+    public class Service
+    {
+        public Service(IThing thing) {}
+    }
+}
+");
+            Assert.Empty(result.Errors);
+            Assert.Empty(result.CompileErrors);
+            // Non-global usings are copied; global usings already apply assembly-wide, so they're skipped.
+            Assert.Contains("using System.Collections.Generic;", result.Generated);
+            Assert.DoesNotContain("global using", result.Generated);
+        }
+
+        [Fact]
         public void GeneratesFactory_WithRequiredFactoryArgCtorParam()
         {
             var result = Run(@"

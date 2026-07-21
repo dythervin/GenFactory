@@ -14,15 +14,31 @@ namespace GenFactory.Tests
     {
         private static readonly ImmutableArray<MetadataReference> References = LoadReferences();
 
-        public static Result Run(params string[] sources)
+        public static Result Run(params string[] sources) => RunCore(null, sources);
+
+        /// <summary>
+        /// Runs <see cref="FactoryGenerator"/> alongside a sibling generator that emits
+        /// <paramref name="siblingSource"/> via <c>RegisterSourceOutput</c>. That output is invisible
+        /// to <see cref="FactoryGenerator"/> (generators can't see each other's output) but present in
+        /// the final compilation — exactly the situation that makes a referenced type an error symbol
+        /// during generation while still compiling afterwards.
+        /// </summary>
+        public static Result RunWithSibling(string siblingSource, params string[] sources) =>
+            RunCore(siblingSource, sources);
+
+        private static Result RunCore(string? siblingSource, string[] sources)
         {
             var trees = sources.Select(s => CSharpSyntaxTree.ParseText(s)).ToArray();
             var compilation = CSharpCompilation.Create("TestAsm", trees, References,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                     nullableContextOptions: NullableContextOptions.Enable));
 
+            IIncrementalGenerator[] generators = siblingSource is null
+                ? new IIncrementalGenerator[] { new FactoryGenerator() }
+                : new IIncrementalGenerator[] { new FactoryGenerator(), new SiblingGenerator(siblingSource) };
+
             var driver = (CSharpGeneratorDriver)CSharpGeneratorDriver
-                .Create(new FactoryGenerator())
+                .Create(generators)
                 .RunGeneratorsAndUpdateCompilation(compilation, out Compilation output, out var genDiagnostics);
 
             string generated = string.Concat(driver.GetRunResult().Results
@@ -35,6 +51,18 @@ namespace GenFactory.Tests
                 .ToArray();
 
             return new Result(generated, genDiagnostics, compileErrors);
+        }
+
+        /// <summary>Emits a fixed source via <c>RegisterSourceOutput</c> so it's hidden from other generators.</summary>
+        private sealed class SiblingGenerator : IIncrementalGenerator
+        {
+            private readonly string _source;
+
+            public SiblingGenerator(string source) => _source = source;
+
+            public void Initialize(IncrementalGeneratorInitializationContext context) =>
+                context.RegisterSourceOutput(context.CompilationProvider,
+                    (spc, _) => spc.AddSource("Sibling.g.cs", _source));
         }
 
         private static ImmutableArray<MetadataReference> LoadReferences()

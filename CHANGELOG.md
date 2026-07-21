@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-21
+
+### Fixed
+
+- A constructor/property type authored in another source generator's output no longer breaks the
+  generated factory. Such a type is an `IErrorTypeSymbol` during this generator's pass (generators
+  can't see each other's output), so it renders as a bare, unqualifiable name (e.g. `DbContext`) and
+  previously failed with CS0246. The target class's non-global `using` directives are now copied into
+  the generated factory so the name binds in the final merged compilation; `global::`-qualified types
+  are unaffected.
+
 ## [0.2.0] - 2026-07-21
 
 ### Changed
@@ -35,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   assembly.
 - Unity UPM package (`com.dythervin.genfactory`), installable via git URL or OpenUPM.
 
-[Unreleased]: https://github.com/dythervin/GenFactory/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/dythervin/GenFactory/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/dythervin/GenFactory/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/dythervin/GenFactory/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dythervin/GenFactory/releases/tag/v0.1.0

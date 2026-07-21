@@ -55,7 +55,13 @@ namespace GenFactory.Generator
         string Constraints = "",
         // Number of type parameters; used to render the unbound-generic typeof(Foo<,>) syntax the
         // registry needs for open-generic factories.
-        int Arity = 0);
+        int Arity = 0,
+        // Non-global using directives copied verbatim from the target class's source file(s). Needed
+        // because a parameter/property type produced by another source generator resolves to an
+        // IErrorTypeSymbol during this generator's pass (generators can't see each other's output),
+        // so it renders as a bare, unqualifiable name (e.g. "DbContext"). Emitting the source's usings
+        // lets that name bind in the final merged compilation; global::-qualified types are unaffected.
+        EquatableArray<string> Usings = default);
 
     /// <summary>
     /// Value-equal wrapper around an immutable array so records containing it participate
